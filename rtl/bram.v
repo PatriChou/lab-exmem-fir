@@ -15,7 +15,7 @@ module bram(
     input   wire    [31:0]   A0;
 
     // counter_la_fir.hex = 7.4kB = 1850 word 
-    parameter N = 12;
+    parameter N = 7;        //It should be greater than 7, otherwise it won't work.
     (* ram_style = "block" *) reg [31:0] RAM[0:2**N-1];     //  word per addr
 
 
