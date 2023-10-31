@@ -17,7 +17,7 @@ int* __attribute__ ( ( section ( ".mprjram" ) ) ) fir(){
 
 	for(i=0; i<N; i++){
 		for(j=0; j<=i; j++){
-			outputsignal[i] = outputsignal[i] + taps[j] * inputsignal[j];
+			outputsignal[i] = outputsignal[i] + inputsignal[i-j] * taps[j];
 		}
 	}
 
