@@ -75,7 +75,7 @@ wire clk;
 wire rst_n;
 
 assign clk = wb_clk_i;
-assign rst_n = wb_rst_i;
+assign rst_n = ~wb_rst_i;
 
 
 wire [`MPRJ_IO_PADS-1:0] io_in;
@@ -95,7 +95,7 @@ localparam DELAY_ST = 2'd3;
 reg [1:0] curr_state, next_state;
 
 always@(posedge clk or negedge rst_n) begin     //curr_state
-    if(rst_n)
+    if(!rst_n)
         curr_state <= 2'd0;
     else
         curr_state <= next_state;
@@ -113,8 +113,7 @@ always@(*) begin            //next_state
                                                     DELAY_ST;
         end
         RD_ST: begin
-            next_state = (fsm_cnt > 4'd0)?  RECV_ST:
-                                            RD_ST;
+            next_state = RECV_ST;
         end
         WR_ST: begin
             next_state = RECV_ST;
@@ -129,7 +128,7 @@ end
 reg [3:0] fsm_cnt;
 
 always@(posedge clk or negedge rst_n) begin
-    if(rst_n)
+    if(!rst_n)
         fsm_cnt <= 4'd0;
     else if( (curr_state != next_state) || (fsm_cnt == 4'b1111) )
         fsm_cnt <= 4'd0;
@@ -159,21 +158,13 @@ assign bram_A   = (wbs_adr_i - 32'h3800_0000) >> 2;
 // addr = 0x38_000_000 
 
 // ================= READ =================
-reg [31:0] wbs_rd_data;
-
-always@(posedge clk) begin          // wbs_rd_data
-    if(curr_state == RD_ST && fsm_cnt == 4'd0)
-        wbs_rd_data <= bram_Do;
-    else
-        wbs_rd_data <= wbs_rd_data;
-end
 
 // ================= WRITE =================
 assign bram_Di = (next_state == WR_ST)? wbs_dat_i : 4'd0;
 
 // ================= WISBONE =================
-assign wbs_ack_o = ( (curr_state == RD_ST && fsm_cnt > 4'd0) || curr_state == WR_ST)? 1'b1 : 1'b0;
-assign wbs_dat_o  = wbs_rd_data;
+assign wbs_ack_o = ( curr_state == RD_ST|| curr_state == WR_ST)? 1'b1 : 1'b0;
+assign wbs_dat_o  = bram_Do;
 
 // ================= IO =================
 assign io_out = bram_Do;
